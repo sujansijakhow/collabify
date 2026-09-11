@@ -1,0 +1,30 @@
+{
+  "name": "@collabify/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@collabify/shared": "workspace:*",
+    "elysia": "^1.1.0",
+    "@elysiajs/cors": "^1.1.0",
+    "@elysiajs/jwt": "^1.1.0",
+    "drizzle-orm": "^0.33.0",
+    "postgres": "^3.4.4",
+    "ioredis": "^5.4.1",
+    "socket.io": "^4.7.5",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "bullmq": "^5.12.0",
+    "kafkajs": "^2.2.4",
+    "firebase-admin": "^12.3.1",
+    "nanoid": "^5.0.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.24.2",
+    "@types/bun": "^1.1.6"
+  }
+}
