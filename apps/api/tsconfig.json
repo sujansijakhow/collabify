@@ -5,7 +5,7 @@
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,
-    "types": ["bun-types"],
+    "types": ["bun"],
     "paths": { "@collabify/shared": ["../../packages/shared/src/types.ts"] }
   }
 }

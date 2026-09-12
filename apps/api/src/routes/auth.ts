@@ -41,4 +41,22 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
       return { id: user.id, email: user.email, name: user.name, role: user.role };
     },
     { body: t.Object({ email: t.String(), password: t.String() }) }
-  );
+  )
+  .get("/me", async ({ jwt, cookie: { auth }, set }) => {
+    const cookieValue = auth.value;
+    const payload = typeof cookieValue === "string" ? await jwt.verify(cookieValue) : null;
+    if (!payload) {
+      set.status = 401;
+      return { error: "Not signed in" };
+    }
+    const [user] = await db.select().from(users).where(eq(users.id, payload.sub as string)).limit(1);
+    if (!user) {
+      set.status = 401;
+      return { error: "Not signed in" };
+    }
+    return { id: user.id, email: user.email, name: user.name, role: user.role };
+  })
+  .post("/logout", ({ cookie: { auth } }) => {
+    auth.remove();
+    return { ok: true };
+  });
