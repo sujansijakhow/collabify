@@ -30,7 +30,7 @@ export default function LiveCallPage() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="font-display text-2xl">Live pitch call</h1>
       <p className="mt-1 text-sm text-slate">
-        Room <span className="font-mono">{roomId}</span> — {connected ? "connected" : "waiting for the other side…"}
+        Room <span className="font-mono">{roomId}</span> - {connected ? "connected" : "waiting for the other side…"}
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

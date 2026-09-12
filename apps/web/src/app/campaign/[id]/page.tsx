@@ -3,14 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
 import { useGetCampaignQuery, useUploadSubmissionMutation } from "@/store/api/apiSlice";
 import { ChatPanel } from "@/components/ChatPanel";
 import { Button } from "@/components/ui/Button";
+import { RequireAuth } from "@/components/RequireAuth";
+import type { RootState } from "@/store/store";
 
-const DEMO_USER_ID = "demo-user-id"; // replace with the authenticated user's id
-
-export default function CampaignDetailPage() {
+function CampaignDetailContent() {
   const { id } = useParams<{ id: string }>();
+  const userId = useSelector((s: RootState) => s.auth.user!.id);
   const { data: campaign, isLoading } = useGetCampaignQuery(id);
   const [uploadSubmission, { isLoading: uploading }] = useUploadSubmissionMutation();
   const [file, setFile] = useState<File | null>(null);
@@ -43,7 +45,7 @@ export default function CampaignDetailPage() {
 
         <div className="mt-8 rounded-lg border border-border bg-white p-5">
           <h2 className="font-display text-lg">Upload a deliverable</h2>
-          <p className="mt-1 text-sm text-slate">Any format works — it's transcoded and thumbnailed automatically.</p>
+          <p className="mt-1 text-sm text-slate">Any format works - it's transcoded and thumbnailed automatically.</p>
           <input
             type="file"
             accept="video/*"
@@ -57,8 +59,16 @@ export default function CampaignDetailPage() {
       </div>
 
       <div className="h-[540px]">
-        <ChatPanel campaignId={campaign.id} userId={DEMO_USER_ID} />
+        <ChatPanel campaignId={campaign.id} userId={userId} />
       </div>
     </main>
+  );
+}
+
+export default function CampaignDetailPage() {
+  return (
+    <RequireAuth>
+      <CampaignDetailContent />
+    </RequireAuth>
   );
 }

@@ -5,7 +5,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from "@collabify/shar
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
-// Single shared connection for the whole app — chat and WebRTC signaling
+// Single shared connection for the whole app - chat and WebRTC signaling
 // multiplex over the same socket rather than opening a new one per feature.
 export function getSocket(userId?: string) {
   if (!socket) {

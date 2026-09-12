@@ -1,22 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useCreateCampaignMutation, useListCampaignsQuery } from "@/store/api/apiSlice";
+import { useSelector } from "react-redux";
+import {
+  useCreateCampaignMutation,
+  useListCampaignsQuery,
+} from "@/store/api/apiSlice";
 import { CampaignCard } from "@/components/CampaignCard";
 import { Button } from "@/components/ui/Button";
+import { RequireAuth } from "@/components/RequireAuth";
+import type { RootState } from "@/store/store";
 
-// NOTE: brandId is hardcoded for this scaffold — wire up real auth (the
-// /auth routes + JWT cookie already issued by the API) before shipping.
-const DEMO_BRAND_ID = "demo-brand-id";
-
-export default function BrandDashboard() {
+function BrandDashboardContent() {
+  const brandId = useSelector((s: RootState) => s.auth.user!.id);
   const { data: campaigns } = useListCampaignsQuery({ status: "open" });
   const [createCampaign, { isLoading }] = useCreateCampaignMutation();
-  const [form, setForm] = useState({ title: "", description: "", budgetCents: 0 });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    budgetCents: 0,
+  });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await createCampaign({ ...form, brandId: DEMO_BRAND_ID, status: "open" });
+    await createCampaign({ ...form, brandId, status: "open" });
     setForm({ title: "", description: "", budgetCents: 0 });
   }
 
@@ -24,7 +31,10 @@ export default function BrandDashboard() {
     <main className="mx-auto max-w-5xl px-6 py-12">
       <h1 className="font-display text-3xl">Your campaigns</h1>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-3 rounded-lg border border-border bg-white p-5">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-8 space-y-3 rounded-lg border border-border bg-white p-5"
+      >
         <h2 className="font-display text-lg">New campaign</h2>
         <input
           required
@@ -45,7 +55,9 @@ export default function BrandDashboard() {
           required
           type="number"
           placeholder="Budget (USD)"
-          onChange={(e) => setForm({ ...form, budgetCents: Number(e.target.value) * 100 })}
+          onChange={(e) =>
+            setForm({ ...form, budgetCents: Number(e.target.value) * 100 })
+          }
           className="w-full rounded-md border border-border px-3 py-2 text-sm"
         />
         <Button type="submit" disabled={isLoading}>
@@ -59,5 +71,13 @@ export default function BrandDashboard() {
         ))}
       </div>
     </main>
+  );
+}
+
+export default function BrandDashboard() {
+  return (
+    <RequireAuth role="brand">
+      <BrandDashboardContent />
+    </RequireAuth>
   );
 }
