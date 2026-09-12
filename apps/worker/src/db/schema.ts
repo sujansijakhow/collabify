@@ -1,5 +1,5 @@
 // The worker intentionally keeps its own minimal view of the tables it
-// touches, rather than importing the API's schema module directly — each
+// touches, rather than importing the API's schema module directly - each
 // service owns its own read/write contract against the shared database.
 import { pgTable, text, timestamp, integer, uniqueIndex } from "drizzle-orm/pg-core";
 

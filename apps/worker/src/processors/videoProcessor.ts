@@ -17,7 +17,7 @@ const PROCESSED_DIR = process.env.PROCESSED_DIR ?? "./processed";
  * On success the submission row is updated and its status flips to "ready";
  * the web app finds out over the "submission:status" socket event, which the
  * API emits by watching the same Postgres row (or, more simply, the worker
- * enqueues a tiny notification job — see notificationProcessor.ts).
+ * enqueues a tiny notification job - see notificationProcessor.ts).
  */
 export async function processVideo({ submissionId, sourcePath }: VideoJobPayload) {
   await mkdir(PROCESSED_DIR, { recursive: true });
