@@ -34,6 +34,10 @@ export interface Application {
   createdAt: string;
 }
 
+export interface ApplicationWithCreator extends Application {
+  creatorName: string;
+}
+
 export type SubmissionStatus = "uploaded" | "processing" | "ready" | "failed";
 
 export interface Submission {
@@ -54,8 +58,6 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-// ---- Socket.io event contracts (shared between web client and api server) ----
-
 export interface ServerToClientEvents {
   "chat:message": (msg: ChatMessage) => void;
   "presence:update": (payload: { userId: string; online: boolean }) => void;
@@ -74,8 +76,6 @@ export interface ClientToServerEvents {
   "webrtc:ice-candidate": (payload: { roomId: string; candidate: RTCIceCandidateInit }) => void;
 }
 
-// ---- Kafka event contracts (analytics event stream) ----
-
 export type AnalyticsEventType =
   | "campaign.viewed"
   | "submission.viewed"
@@ -87,8 +87,6 @@ export interface AnalyticsEvent {
   userId?: string;
   ts: string;
 }
-
-// ---- BullMQ job payloads ----
 
 export interface VideoJobPayload {
   submissionId: string;
