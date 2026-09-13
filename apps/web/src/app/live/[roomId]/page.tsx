@@ -1,46 +1,42 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
-import { LiveCallSession } from "@/lib/webrtc";
-import { Button } from "@/components/ui/Button";
+import { useListCampaignsQuery } from "@/store/api/apiSlice";
+import { CampaignCard } from "@/components/CampaignCard";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { RequireAuth } from "@/components/RequireAuth";
 
-export default function LiveCallPage() {
-  const { roomId } = useParams<{ roomId: string }>();
-  const localRef = useRef<HTMLVideoElement>(null);
-  const remoteRef = useRef<HTMLVideoElement>(null);
-  const sessionRef = useRef<LiveCallSession | null>(null);
-  const [connected, setConnected] = useState(false);
-
-  useEffect(() => {
-    const session = new LiveCallSession(roomId, (stream) => {
-      if (remoteRef.current) remoteRef.current.srcObject = stream;
-      setConnected(true);
-    });
-    sessionRef.current = session;
-
-    session.startLocalMedia().then((stream) => {
-      if (localRef.current) localRef.current.srcObject = stream;
-    });
-
-    return () => session.hangUp();
-  }, [roomId]);
+function CreatorDashboardContent() {
+  const { data: campaigns, isLoading } = useListCampaignsQuery({
+    status: "open",
+  });
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="font-display text-2xl">Live pitch call</h1>
-      <p className="mt-1 text-sm text-slate">
-        Room <span className="font-mono">{roomId}</span> - {connected ? "connected" : "waiting for the other side…"}
-      </p>
+    <main className="mx-auto max-w-5xl px-6 py-12">
+      <PageHeader
+        eyebrow="Creator dashboard"
+        title="Open campaigns"
+        description="Pitch a brand, then chat and share deliverables in one place."
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <video ref={localRef} autoPlay muted playsInline className="aspect-video w-full rounded-lg bg-ink" />
-        <video ref={remoteRef} autoPlay playsInline className="aspect-video w-full rounded-lg bg-ink" />
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {isLoading && <p className="text-sm text-slate">Loading campaigns…</p>}
+        {campaigns?.map((c) => (
+          <CampaignCard key={c.id} campaign={c} />
+        ))}
+        {campaigns?.length === 0 && !isLoading && (
+          <p className="text-sm text-slate">
+            No open campaigns right now — check back soon.
+          </p>
+        )}
       </div>
-
-      <Button onClick={() => sessionRef.current?.callAsInitiator()} className="mt-6">
-        Call
-      </Button>
     </main>
+  );
+}
+
+export default function CreatorDashboard() {
+  return (
+    <RequireAuth role="creator">
+      <CreatorDashboardContent />
+    </RequireAuth>
   );
 }
