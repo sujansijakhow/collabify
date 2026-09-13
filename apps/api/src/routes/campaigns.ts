@@ -4,7 +4,7 @@ import { campaigns } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { cacheCampaignList, invalidateCampaignList } from "../lib/redis";
 import { publishAnalyticsEvent } from "../lib/kafka";
-import { authPlugin } from "../lib/auth-gurad";
+import { authPlugin } from "../lib/auth-guard";
 
 export const campaignRoutes = new Elysia({ prefix: "/campaigns" })
   .use(authPlugin)

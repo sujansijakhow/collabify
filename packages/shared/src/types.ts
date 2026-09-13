@@ -34,10 +34,6 @@ export interface Application {
   createdAt: string;
 }
 
-export interface ApplicationWithCreator extends Application {
-  creatorName: string;
-}
-
 export type SubmissionStatus = "uploaded" | "processing" | "ready" | "failed";
 
 export interface Submission {
@@ -48,6 +44,11 @@ export interface Submission {
   thumbnailUrl?: string | null;
   status: SubmissionStatus;
   createdAt: string;
+}
+
+export interface ApplicationWithCreator extends Application {
+  creatorName: string;
+  submission: Submission | null;
 }
 
 export interface ChatMessage {

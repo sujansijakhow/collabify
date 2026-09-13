@@ -4,7 +4,7 @@ import { submissions } from "../db/schema";
 import { videoQueue } from "../lib/queue";
 import { mkdir } from "fs/promises";
 import { join } from "path";
-import { authPlugin } from "../lib/auth-gurad";
+import { authPlugin } from "../lib/auth-guard";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./uploads";
 
