@@ -6,3 +6,6 @@ dist
 *.log
 uploads/
 processed/
+shared-uploads/
+shared-processed/
+apps/worker/*.jpg

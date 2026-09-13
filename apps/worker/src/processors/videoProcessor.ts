@@ -8,18 +8,9 @@ import type { VideoJobPayload } from "@collabify/shared";
 
 const PROCESSED_DIR = process.env.PROCESSED_DIR ?? "./processed";
 
-/**
- * Runs for every "process-video" job added to the `video-processing` BullMQ
- * queue by the API's submissions route. Two ffmpeg passes:
- *   1. A JPEG thumbnail grabbed at the 2s mark.
- *   2. A web-friendly H.264/AAC MP4 transcode (source could be any codec a
- *      creator's phone produced).
- * On success the submission row is updated and its status flips to "ready";
- * the web app finds out over the "submission:status" socket event, which the
- * API emits by watching the same Postgres row (or, more simply, the worker
- * enqueues a tiny notification job - see notificationProcessor.ts).
- */
 export async function processVideo({ submissionId, sourcePath }: VideoJobPayload) {
+  console.log(`[video] starting job for submission ${submissionId} (${sourcePath})`);
+
   await mkdir(PROCESSED_DIR, { recursive: true });
   const base = basename(sourcePath, extname(sourcePath));
   const thumbnailPath = join(PROCESSED_DIR, `${base}.jpg`);
@@ -28,14 +19,20 @@ export async function processVideo({ submissionId, sourcePath }: VideoJobPayload
   await db.update(submissions).set({ status: "processing" }).where(eq(submissions.id, submissionId));
 
   try {
+    console.log(`[video] extracting thumbnail -> ${thumbnailPath}`);
     await extractThumbnail(sourcePath, thumbnailPath);
+
+    console.log(`[video] transcoding -> ${videoPath}`);
     await transcode(sourcePath, videoPath);
 
     await db
       .update(submissions)
       .set({ status: "ready", thumbnailUrl: thumbnailPath, videoUrl: videoPath })
       .where(eq(submissions.id, submissionId));
+
+    console.log(`[video] done — submission ${submissionId} is now "ready"`);
   } catch (err) {
+    console.error(`[video] failed for submission ${submissionId}:`, err);
     await db.update(submissions).set({ status: "failed" }).where(eq(submissions.id, submissionId));
     throw err;
   }
@@ -56,6 +53,7 @@ function transcode(input: string, output: string) {
       .videoCodec("libx264")
       .audioCodec("aac")
       .outputOptions(["-movflags +faststart", "-crf 23", "-preset veryfast"])
+      .on("progress", (p) => console.log(`[video] transcode progress: ${Math.round(p.percent ?? 0)}%`))
       .on("end", () => resolve())
       .on("error", reject)
       .save(output);

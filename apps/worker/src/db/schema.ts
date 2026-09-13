@@ -1,7 +1,8 @@
 // The worker intentionally keeps its own minimal view of the tables it
-// touches, rather than importing the API's schema module directly - each
+// touches, rather than importing the API's schema module directly — each
 // service owns its own read/write contract against the shared database.
 import { pgTable, text, timestamp, integer, uniqueIndex } from "drizzle-orm/pg-core";
+import { nanoid } from "nanoid";
 
 export const submissions = pgTable("submissions", {
   id: text("id").primaryKey(),
@@ -22,7 +23,7 @@ export const users = pgTable("users", {
 export const analyticsCounters = pgTable(
   "analytics_counters",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().$defaultFn(() => nanoid()),
     entityId: text("entity_id").notNull(),
     eventType: text("event_type").notNull(),
     count: integer("count").notNull().default(0),
