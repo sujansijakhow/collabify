@@ -56,6 +56,21 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
     }
     return { id: user.id, email: user.email, name: user.name, role: user.role };
   })
+  .patch(
+    "/me/fcm-token",
+    async ({ body, jwt, cookie: { auth }, set }) => {
+      const cookieValue = auth.value;
+      const payload = typeof cookieValue === "string" ? await jwt.verify(cookieValue) : null;
+      if (!payload) {
+        set.status = 401;
+        return { error: "Not signed in" };
+      }
+
+      await db.update(users).set({ fcmToken: body.token }).where(eq(users.id, payload.sub as string));
+      return { ok: true };
+    },
+    { body: t.Object({ token: t.String({ minLength: 1 }) }) },
+  )
   .post("/logout", ({ cookie: { auth } }) => {
     auth.remove();
     return { ok: true };

@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db/client";
-import { submissions } from "../db/schema";
+import { applications, submissions } from "../db/schema";
+import { eq } from "drizzle-orm";
 import { videoQueue } from "../lib/queue";
 import { mkdir } from "fs/promises";
 import { join } from "path";
@@ -13,9 +14,19 @@ export const submissionRoutes = new Elysia({ prefix: "/submissions" })
   .post(
     "/",
     async ({ body, currentUser, set }) => {
-      if (!currentUser) {
-        set.status = 401;
-        return { error: "You must be signed in to upload" };
+      if (!currentUser || currentUser.role !== "creator") {
+        set.status = 403;
+        return { error: "Only creator accounts can upload deliverables" };
+      }
+
+      const [application] = await db
+        .select()
+        .from(applications)
+        .where(eq(applications.id, body.applicationId))
+        .limit(1);
+      if (!application || application.creatorId !== currentUser.id) {
+        set.status = 403;
+        return { error: "You can only upload to your own application" };
       }
 
       await mkdir(UPLOAD_DIR, { recursive: true });

@@ -63,6 +63,9 @@ export interface ServerToClientEvents {
   "chat:message": (msg: ChatMessage) => void;
   "presence:update": (payload: { userId: string; online: boolean }) => void;
   "submission:status": (payload: { submissionId: string; status: SubmissionStatus }) => void;
+  "call:incoming": (payload: { roomId: string; from: string }) => void;
+  "call:accepted": (payload: { roomId: string }) => void;
+  "call:declined": (payload: { roomId: string }) => void;
   "webrtc:offer": (payload: { from: string; sdp: RTCSessionDescriptionInit }) => void;
   "webrtc:answer": (payload: { from: string; sdp: RTCSessionDescriptionInit }) => void;
   "webrtc:ice-candidate": (payload: { from: string; candidate: RTCIceCandidateInit }) => void;
@@ -71,7 +74,10 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   "chat:join": (campaignId: string) => void;
   "chat:message": (payload: { campaignId: string; content: string }) => void;
-  "webrtc:join": (roomId: string) => void;
+  "call:request": (payload: { roomId: string }) => void;
+  "call:accept": (payload: { roomId: string }) => void;
+  "call:decline": (payload: { roomId: string }) => void;
+  "webrtc:join": (roomId: string, callback?: () => void) => void;
   "webrtc:offer": (payload: { roomId: string; sdp: RTCSessionDescriptionInit }) => void;
   "webrtc:answer": (payload: { roomId: string; sdp: RTCSessionDescriptionInit }) => void;
   "webrtc:ice-candidate": (payload: { roomId: string; candidate: RTCIceCandidateInit }) => void;

@@ -30,6 +30,20 @@ export async function fetchCurrentUser(): Promise<User | null> {
   return (await res.json()) as User;
 }
 
+export async function saveFcmToken(token: string) {
+  const res = await fetch("/api/auth/me/fcm-token", {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to save FCM token");
+  }
+}
+
 export async function logoutUser() {
   await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
 }

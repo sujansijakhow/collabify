@@ -8,7 +8,11 @@ import { authPlugin } from "../lib/auth-guard";
 
 export const campaignRoutes = new Elysia({ prefix: "/campaigns" })
   .use(authPlugin)
-  .get("/", async ({ query }) => {
+  .get("/", async ({ query, currentUser, set }) => {
+    if (!currentUser || currentUser.role !== "creator") {
+      set.status = 403;
+      return { error: "Only creator accounts can browse campaigns" };
+    }
     const status = query.status ?? "open";
     return cacheCampaignList(`campaigns:list:${status}`, () =>
       db.select().from(campaigns).where(eq(campaigns.status, status as any))
@@ -21,11 +25,15 @@ export const campaignRoutes = new Elysia({ prefix: "/campaigns" })
     }
     return db.select().from(campaigns).where(eq(campaigns.brandId, currentUser.id));
   })
-  .get("/:id", async ({ params, set }) => {
+  .get("/:id", async ({ params, currentUser, set }) => {
     const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, params.id)).limit(1);
     if (!campaign) {
       set.status = 404;
       return { error: "Campaign not found" };
+    }
+    if (!currentUser || (currentUser.role === "brand" && campaign.brandId !== currentUser.id)) {
+      set.status = 403;
+      return { error: "You do not have access to this campaign" };
     }
     void publishAnalyticsEvent({ type: "campaign.viewed", entityId: campaign.id, ts: new Date().toISOString() });
     return campaign;

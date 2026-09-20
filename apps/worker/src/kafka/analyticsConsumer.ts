@@ -25,6 +25,15 @@ const REDIS_KEY_PREFIX = "analytics:pending";
 
 export async function startAnalyticsConsumer() {
   const consumer = kafka.consumer({ groupId: "analytics-aggregator" });
+  const admin = kafka.admin();
+
+  await admin.connect();
+  await admin.createTopics({
+    topics: [{ topic: "analytics", numPartitions: 1, replicationFactor: 1 }],
+    waitForLeaders: true,
+  });
+  await admin.disconnect();
+
   await consumer.connect();
   await consumer.subscribe({ topic: "analytics", fromBeginning: false });
 

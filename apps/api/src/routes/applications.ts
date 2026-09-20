@@ -20,7 +20,16 @@ export const applicationRoutes = new Elysia({ prefix: "/applications" })
       .limit(1);
     return existing ?? null;
   })
-  .get("/campaign/:campaignId", async ({ params }) => {
+  .get("/campaign/:campaignId", async ({ params, currentUser, set }) => {
+    if (!currentUser || currentUser.role !== "brand") {
+      set.status = 403;
+      return { error: "Only brand accounts can review applications" };
+    }
+    const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, params.campaignId)).limit(1);
+    if (!campaign || campaign.brandId !== currentUser.id) {
+      set.status = 403;
+      return { error: "You do not own this campaign" };
+    }
     const rows = await db
       .select({
         id: applications.id,

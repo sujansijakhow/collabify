@@ -2,9 +2,27 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import type { Server as HttpServer } from "http";
 import type { ClientToServerEvents, ServerToClientEvents } from "@collabify/shared";
+import { eq, and } from "drizzle-orm";
 import { redisPub, redisSub } from "../lib/redis";
 import { db } from "../db/client";
-import { messages } from "../db/schema";
+import { applications, campaigns, messages } from "../db/schema";
+
+async function canUserJoinLiveRoom(userId: string | undefined, roomId: string) {
+  if (!userId) return false;
+
+  const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, roomId)).limit(1);
+  if (!campaign) return false;
+
+  if (campaign.brandId === userId) return true;
+
+  const [application] = await db
+    .select()
+    .from(applications)
+    .where(and(eq(applications.campaignId, roomId), eq(applications.creatorId, userId), eq(applications.status, "accepted")))
+    .limit(1);
+
+  return Boolean(application);
+}
 
 /**
  * Wires up Socket.io on top of the Bun HTTP server. Two responsibilities:
@@ -29,6 +47,27 @@ export function attachSocketServer(httpServer: HttpServer) {
       socket.join(`campaign:${campaignId}`);
     });
 
+    socket.on("call:request", async ({ roomId }) => {
+      if (!(await canUserJoinLiveRoom(userId, roomId))) return;
+      socket.to(`webrtc:${roomId}`).emit("call:incoming", { roomId, from: userId ?? socket.id });
+    });
+
+    socket.on("call:accept", async ({ roomId }) => {
+      if (!(await canUserJoinLiveRoom(userId, roomId))) return;
+      socket.to(`webrtc:${roomId}`).emit("call:accepted", { roomId });
+    });
+
+    socket.on("call:decline", async ({ roomId }) => {
+      if (!(await canUserJoinLiveRoom(userId, roomId))) return;
+      socket.to(`webrtc:${roomId}`).emit("call:declined", { roomId });
+    });
+
+    socket.on("webrtc:join", async (roomId, callback) => {
+      if (!(await canUserJoinLiveRoom(userId, roomId))) return;
+      socket.join(`webrtc:${roomId}`);
+      callback?.();
+    });
+
     socket.on("chat:message", async ({ campaignId, content }) => {
       if (!userId) return;
       const [saved] = await db
@@ -45,8 +84,6 @@ export function attachSocketServer(httpServer: HttpServer) {
     });
 
     // --- WebRTC signaling (mesh, 1:1 room) ---
-    socket.on("webrtc:join", (roomId) => socket.join(`webrtc:${roomId}`));
-
     socket.on("webrtc:offer", ({ roomId, sdp }) => {
       socket.to(`webrtc:${roomId}`).emit("webrtc:offer", { from: socket.id, sdp });
     });

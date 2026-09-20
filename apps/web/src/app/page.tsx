@@ -1,6 +1,23 @@
+"use client";
+
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import type { RootState } from "@/store/store";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { user, status } = useSelector((s: RootState) => s.auth);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace(user?.role === "brand" ? "/dashboard/brand" : "/dashboard/creator");
+    }
+  }, [router, status, user?.role]);
+
+  if (status === "authenticated") return null;
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-20">
       <section className="mt-8 max-w-2xl">
